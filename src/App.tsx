@@ -30,21 +30,30 @@ export function App() {
 
   const isTelegram = isTelegramWebApp();
 
-  // Toast dispatcher
+  // Toast dispatcher with strict deduplication
   const showToast = useCallback((message: string, type: 'success' | 'info' | 'error' = 'success') => {
-    const id = crypto.randomUUID();
-    setToasts((prev) => [...prev, { id, message, type }]);
-    setTimeout(() => {
-      setToasts((prev) => prev.filter((t) => t.id !== id));
-    }, 2500);
+    setToasts((prev) => {
+      if (prev.some((t) => t.message === message)) {
+        return prev;
+      }
+      const id = crypto.randomUUID();
+      setTimeout(() => {
+        setToasts((curr) => curr.filter((t) => t.id !== id));
+      }, 2500);
+      return [...prev, { id, message, type }];
+    });
   }, []);
 
   // Initialize Supabase Auth & Telegram listeners
   useEffect(() => {
-    const unsubscribe = AuthService.initAuthListener((user) => {
+    const unsubscribe = AuthService.initAuthListener((user, event) => {
       setUserSession(user);
       if (user) {
-        showToast(`Signed in as ${user.name || user.email}`, 'success');
+        // Only show toast on genuine new sign-in action, NOT on page refresh/INITIAL_SESSION
+        if (event === 'SIGNED_IN') {
+          showToast(`Signed in as ${user.name || user.email}`, 'success');
+        }
+
         // Fetch cloud vault on sign in
         StorageService.fetchCloudVault(user.id).then((cloudAccounts) => {
           if (cloudAccounts && cloudAccounts.length > 0) {

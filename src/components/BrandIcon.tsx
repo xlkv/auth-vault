@@ -166,6 +166,43 @@ export const BrandIcon: React.FC<BrandIconProps> = ({ issuer, size = 20, classNa
     );
   }
 
+  // HackerOne
+  if (normalized.includes('hackerone') || normalized.includes('hacker1') || normalized === 'h1') {
+    return (
+      <svg width={size} height={size} viewBox="0 0 24 24" fill="currentColor" className={className}>
+        <path d="M7.747 1.5H3.618v21h4.129V1.5zM20.382 1.5h-4.13v8.083H12.12V1.5H7.993v21h4.128v-8.417h4.132V22.5h4.129V1.5z" fill="#EB2F5E" />
+      </svg>
+    );
+  }
+
+  // Heroku
+  if (normalized.includes('heroku')) {
+    return (
+      <svg width={size} height={size} viewBox="0 0 24 24" fill="#6762A6" className={className}>
+        <path d="M21.57 0H2.43A2.43 2.43 0 000 2.43v19.14A2.43 2.43 0 002.43 24h19.14A2.43 2.43 0 0024 21.57V2.43A2.43 2.43 0 0021.57 0zM7.34 20.35H4.21v-8.49h3.13v8.49zm0-10.12H4.21V4.86h3.13v5.37zm6.33 10.12h-3.13V4.86h3.13v15.49zm6.12 0h-3.13v-5.37h3.13v5.37zm0-7H16.66V4.86h3.13v8.49z" />
+      </svg>
+    );
+  }
+
+  // Bitwarden
+  if (normalized.includes('bitwarden')) {
+    return (
+      <svg width={size} height={size} viewBox="0 0 24 24" fill="#175DDC" className={className}>
+        <path d="M12 0C7.2 0 3.3 3.9 3.3 8.7v4.6c0 6.6 8.7 10.7 8.7 10.7s8.7-4.1 8.7-10.7V8.7C20.7 3.9 16.8 0 12 0zm6.7 13.3c0 4.9-6.7 8.4-6.7 8.4s-6.7-3.5-6.7-8.4V8.7c0-3.7 3-6.7 6.7-6.7s6.7 3 6.7 6.7v4.6z" />
+      </svg>
+    );
+  }
+
+  // General Authenticator / 2FA Shield
+  if (normalized.includes('authenticator') || normalized.includes('auth') || normalized.includes('totp') || normalized.includes('2fa')) {
+    return (
+      <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className} style={{ color: 'var(--accent-primary)' }}>
+        <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
+        <path d="M9 12l2 2 4-4" />
+      </svg>
+    );
+  }
+
   // Cloudflare
   if (normalized.includes('cloudflare')) {
     return (

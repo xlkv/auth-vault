@@ -6,11 +6,11 @@ export class AuthService {
   /**
    * Initialize and listen for Supabase auth state changes (OAuth redirects from Google / Apple)
    */
-  static initAuthListener(onUserChange: (user: UserSession | null) => void): () => void {
+  static initAuthListener(onUserChange: (user: UserSession | null, event?: string) => void): () => void {
     const supabase = getSupabaseClient();
     if (!supabase) return () => {};
 
-    // 1. Get initial session
+    // 1. Get initial session silently (no sign-in toast on page refresh)
     supabase.auth.getSession().then(({ data: { session } }) => {
       if (session?.user) {
         const u = session.user;
@@ -22,12 +22,12 @@ export class AuthService {
           provider: (u.app_metadata?.provider as 'google' | 'apple') || 'google'
         };
         StorageService.setUserSession(userSession);
-        onUserChange(userSession);
+        onUserChange(userSession, 'INITIAL_SESSION');
       }
     });
 
     // 2. Subscribe to auth events
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
       if (session?.user) {
         const u = session.user;
         const userSession: UserSession = {
@@ -38,12 +38,12 @@ export class AuthService {
           provider: (u.app_metadata?.provider as 'google' | 'apple') || 'google'
         };
         StorageService.setUserSession(userSession);
-        onUserChange(userSession);
+        onUserChange(userSession, event);
       } else {
         const current = StorageService.getUserSession();
         if (current && current.provider !== 'local' && current.provider !== 'telegram') {
           StorageService.setUserSession(null);
-          onUserChange(null);
+          onUserChange(null, 'SIGNED_OUT');
         }
       }
     });
