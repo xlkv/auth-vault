@@ -27,20 +27,17 @@ export const Navbar: React.FC<NavbarProps> = ({
   return (
     <header className="header-nav">
       <div className="header-container">
-        {/* Minimal Brand */}
+        {/* Pure Brand Label */}
         <div className="brand-badge">
           <div className="brand-logo-icon">
-            <Shield size={18} strokeWidth={2.2} />
+            <Shield size={16} strokeWidth={2.4} />
           </div>
-          <div className="brand-title-group">
-            <span className="brand-title">VaultAuth</span>
-            <span className="brand-version">v1.0</span>
-          </div>
+          <span className="brand-title">VaultAuth</span>
         </div>
 
         {/* Header Actions */}
         <div className="header-actions">
-          {/* User Profile / Sign In */}
+          {/* User Profile */}
           {userSession && userSession.provider !== 'local' ? (
             <div style={{ position: 'relative' }}>
               <button
@@ -89,9 +86,9 @@ export const Navbar: React.FC<NavbarProps> = ({
             </button>
           )}
 
-          <button className="btn btn-primary" onClick={onOpenAddModal}>
+          <button className="btn btn-primary btn-add-main" onClick={onOpenAddModal}>
             <Plus size={16} strokeWidth={2.5} />
-            <span>Add</span>
+            <span>Add Account</span>
           </button>
         </div>
       </div>

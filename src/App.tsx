@@ -12,7 +12,7 @@ import { AuthModal } from './components/AuthModal';
 import { AuthScreen } from './components/AuthScreen';
 import { LockScreen } from './components/LockScreen';
 import { ToastContainer, ToastMessage } from './components/Toast';
-import { Plus, ShieldAlert, Sparkles } from 'lucide-react';
+import { Plus } from 'lucide-react';
 import confetti from 'canvas-confetti';
 
 export function App() {
@@ -232,6 +232,9 @@ export function App() {
 
   return (
     <div className="app-layout">
+      {/* Ambient warm backlight glow matching Auth screen */}
+      <div className="pure-glow" />
+
       <Navbar
         onOpenAddModal={() => setIsAddModalOpen(true)}
         onOpenSettingsModal={() => setIsSettingsModalOpen(true)}
@@ -243,7 +246,7 @@ export function App() {
         isTelegram={isTelegram}
       />
 
-      <main>
+      <main className="main-content-area">
         <SearchAndFilter
           searchQuery={searchQuery}
           onSearchChange={setSearchQuery}
@@ -266,21 +269,25 @@ export function App() {
           </div>
         ) : (
           <div className="empty-state">
-            <div className="empty-icon-circle">
-              {searchQuery ? <ShieldAlert size={24} /> : <Sparkles size={24} />}
-            </div>
             <h3 className="empty-title">
-              {searchQuery ? 'No matching accounts' : 'Vault is empty'}
+              {searchQuery ? (
+                'No matching accounts'
+              ) : (
+                <>
+                  No accounts yet, <br />
+                  <span className="pure-serif-italic">ready to add your first?</span>
+                </>
+              )}
             </h3>
             <p className="empty-desc">
               {searchQuery
-                ? `No accounts matching "${searchQuery}".`
-                : 'Add an account via camera QR scan, image upload, or manual secret.'}
+                ? `No accounts found matching "${searchQuery}".`
+                : 'Scan a QR code from your screen, paste from clipboard, or enter a secret key.'}
             </p>
             {!searchQuery && (
-              <button className="btn btn-primary" onClick={() => setIsAddModalOpen(true)}>
-                <Plus size={15} strokeWidth={2.5} />
-                <span>Add Account</span>
+              <button className="btn btn-primary btn-add-empty" onClick={() => setIsAddModalOpen(true)}>
+                <Plus size={16} strokeWidth={2.5} />
+                <span>Add Your First Account</span>
               </button>
             )}
           </div>
