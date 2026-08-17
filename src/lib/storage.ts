@@ -6,13 +6,16 @@ const PIN_HASH_KEY = 'vaultauth_pin_hash_v1';
 const SYNC_CONFIG_KEY = 'vaultauth_sync_config_v1';
 const USER_SESSION_KEY = 'vaultauth_session_v1';
 
+const DEFAULT_SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL || 'https://cszarmfcbwargdzopfxd.supabase.co';
+const DEFAULT_SUPABASE_KEY = import.meta.env.VITE_SUPABASE_ANON_KEY || 'sb_publishable_hhVuX7PZqhd6rqFNCzSkwQ_TxOkRRvp';
+
 // Seed demo accounts for immediate delight on first run
 export const DEMO_ACCOUNTS: TotpAccount[] = [
   {
     id: 'demo-github',
     issuer: 'GitHub',
     accountName: 'developer@example.com',
-    secret: 'JBSWY3DPEHPK3PXP', // standard test seed
+    secret: 'JBSWY3DPEHPK3PXP',
     algorithm: 'SHA1',
     digits: 6,
     period: 30,
@@ -70,7 +73,6 @@ export class StorageService {
     try {
       const raw = localStorage.getItem(STORAGE_KEY);
       if (!raw) {
-        // Initialize with demo accounts for great initial UX
         this.saveAccounts(DEMO_ACCOUNTS);
         return DEMO_ACCOUNTS;
       }
@@ -165,16 +167,16 @@ export class StorageService {
     try {
       const raw = localStorage.getItem(SYNC_CONFIG_KEY);
       return raw ? JSON.parse(raw) : {
-        supabaseUrl: '',
-        supabaseAnonKey: '',
-        enabled: false,
+        supabaseUrl: DEFAULT_SUPABASE_URL,
+        supabaseAnonKey: DEFAULT_SUPABASE_KEY,
+        enabled: true,
         autoSync: true
       };
     } catch {
       return {
-        supabaseUrl: '',
-        supabaseAnonKey: '',
-        enabled: false,
+        supabaseUrl: DEFAULT_SUPABASE_URL,
+        supabaseAnonKey: DEFAULT_SUPABASE_KEY,
+        enabled: true,
         autoSync: true
       };
     }
@@ -191,21 +193,14 @@ export class StorageService {
 let supabaseInstance: SupabaseClient | null = null;
 
 export function getSupabaseClient(url?: string, key?: string): SupabaseClient | null {
-  if (url && key) {
-    try {
-      supabaseInstance = createClient(url, key);
-      return supabaseInstance;
-    } catch {
-      return null;
-    }
-  }
+  const targetUrl = url || StorageService.getSyncConfig().supabaseUrl || DEFAULT_SUPABASE_URL;
+  const targetKey = key || StorageService.getSyncConfig().supabaseAnonKey || DEFAULT_SUPABASE_KEY;
 
-  if (supabaseInstance) return supabaseInstance;
-
-  const config = StorageService.getSyncConfig();
-  if (config.enabled && config.supabaseUrl && config.supabaseAnonKey) {
+  if (targetUrl && targetKey) {
     try {
-      supabaseInstance = createClient(config.supabaseUrl, config.supabaseAnonKey);
+      if (!supabaseInstance || (url && key)) {
+        supabaseInstance = createClient(targetUrl, targetKey);
+      }
       return supabaseInstance;
     } catch {
       return null;

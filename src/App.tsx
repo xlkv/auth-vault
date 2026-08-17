@@ -29,8 +29,24 @@ export function App() {
 
   const isTelegram = isTelegramWebApp();
 
-  // Initialize Telegram if running in Telegram
+  // Toast dispatcher
+  const showToast = useCallback((message: string, type: 'success' | 'info' | 'error' = 'success') => {
+    const id = crypto.randomUUID();
+    setToasts((prev) => [...prev, { id, message, type }]);
+    setTimeout(() => {
+      setToasts((prev) => prev.filter((t) => t.id !== id));
+    }, 2500);
+  }, []);
+
+  // Initialize Supabase Auth & Telegram listeners
   useEffect(() => {
+    const unsubscribe = AuthService.initAuthListener((user) => {
+      setUserSession(user);
+      if (user) {
+        showToast(`Signed in as ${user.name || user.email}`, 'success');
+      }
+    });
+
     if (isTelegram) {
       initTelegramApp();
       const tgUser = getTelegramUser();
@@ -46,16 +62,9 @@ export function App() {
         StorageService.setUserSession(session);
       }
     }
-  }, [isTelegram, userSession]);
 
-  // Toast dispatcher
-  const showToast = useCallback((message: string, type: 'success' | 'info' | 'error' = 'success') => {
-    const id = crypto.randomUUID();
-    setToasts((prev) => [...prev, { id, message, type }]);
-    setTimeout(() => {
-      setToasts((prev) => prev.filter((t) => t.id !== id));
-    }, 2500);
-  }, []);
+    return () => unsubscribe();
+  }, [isTelegram, showToast]);
 
   // Listen for storage updates
   useEffect(() => {

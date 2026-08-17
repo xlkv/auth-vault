@@ -27,12 +27,20 @@ export const AuthModal: React.FC<AuthModalProps> = ({
     const res = await AuthService.signInWithGoogle();
     setIsLoading(false);
     if (res.success) {
-      const session = AuthService.getSession();
-      onAuthSuccess(session);
-      onShowToast('Signed in with Google!', 'success');
-      onClose();
+      onShowToast('Redirecting to Google...', 'info');
     } else {
       onShowToast(res.error || 'Google login failed', 'error');
+    }
+  };
+
+  const handleAppleLogin = async () => {
+    setIsLoading(true);
+    const res = await AuthService.signInWithApple();
+    setIsLoading(false);
+    if (res.success) {
+      onShowToast('Redirecting to Apple...', 'info');
+    } else {
+      onShowToast(res.error || 'Apple login failed', 'error');
     }
   };
 
@@ -47,14 +55,12 @@ export const AuthModal: React.FC<AuthModalProps> = ({
     const res = await AuthService.signInWithEmail(email.trim());
     setIsLoading(false);
     if (res.success) {
-      const session = AuthService.getSession();
-      onAuthSuccess(session);
       setEmailSent(true);
-      onShowToast('Signed in successfully!', 'success');
+      onShowToast('Magic login link sent to your email!', 'success');
       setTimeout(() => {
         onClose();
         setEmailSent(false);
-      }, 1200);
+      }, 2000);
     } else {
       onShowToast(res.error || 'Sign in failed', 'error');
     }
@@ -86,11 +92,11 @@ export const AuthModal: React.FC<AuthModalProps> = ({
               Welcome to VaultAuth
             </h2>
             <p style={{ fontSize: '0.85rem', color: 'var(--text-secondary)', marginTop: '0.35rem' }}>
-              Sync your 2FA accounts across all devices with zero-knowledge encryption.
+              Sync your 2FA accounts securely with Google, Apple, or local offline vault.
             </p>
           </div>
 
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem', marginTop: '1.25rem' }}>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '0.65rem', marginTop: '1.25rem' }}>
             {/* Google Sign In Button */}
             <button
               type="button"
@@ -119,18 +125,31 @@ export const AuthModal: React.FC<AuthModalProps> = ({
               <span>Continue with Google</span>
             </button>
 
+            {/* Apple Sign In Button */}
+            <button
+              type="button"
+              className="btn apple-auth-btn"
+              onClick={handleAppleLogin}
+              disabled={isLoading}
+            >
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor">
+                <path d="M18.71 19.5c-.83 1.24-1.71 2.45-3.05 2.47-1.34.03-1.77-.79-3.29-.79-1.53 0-2 .77-3.27.82-1.31.05-2.3-1.32-3.14-2.53C4.25 17 2.94 12.45 4.7 9.39c.87-1.52 2.43-2.48 4.12-2.51 1.28-.02 2.5.87 3.29.87.78 0 2.26-1.07 3.81-.91.65.03 2.47.26 3.64 1.98-.09.06-2.17 1.28-2.15 3.81.03 3.02 2.65 4.03 2.68 4.04-.03.07-.42 1.44-1.38 2.83M15.97 6.37c.61-.75 1.04-1.8 0.92-2.85-.9.04-2 .6-2.65 1.35-.58.66-1.09 1.73-.95 2.76 1.01.08 2.05-.51 2.68-1.26z" />
+              </svg>
+              <span>Continue with Apple</span>
+            </button>
+
             <div className="auth-divider">
-              <span>or sign in with email</span>
+              <span>or email magic link</span>
             </div>
 
             {/* Email Magic Link Form */}
             {emailSent ? (
               <div
                 style={{
-                  background: 'var(--accent-emerald-subtle)',
+                  background: 'rgba(16, 185, 129, 0.1)',
                   border: '1px solid var(--accent-emerald)',
-                  borderRadius: 'var(--radius-md)',
-                  padding: '1rem',
+                  borderRadius: 'var(--radius-sm)',
+                  padding: '0.85rem',
                   display: 'flex',
                   alignItems: 'center',
                   justifyContent: 'center',
@@ -139,7 +158,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({
                 }}
               >
                 <CheckCircle size={18} />
-                <span style={{ fontSize: '0.875rem', fontWeight: 600 }}>Signed in successfully!</span>
+                <span style={{ fontSize: '0.825rem', fontWeight: 600 }}>Login link sent to your email!</span>
               </div>
             ) : (
               <form onSubmit={handleEmailLogin} style={{ display: 'flex', gap: '0.5rem' }}>
@@ -158,21 +177,21 @@ export const AuthModal: React.FC<AuthModalProps> = ({
                     required
                   />
                 </div>
-                <button type="submit" className="btn btn-primary" disabled={isLoading} style={{ padding: '0.7rem 1rem' }}>
+                <button type="submit" className="btn btn-primary" disabled={isLoading} style={{ padding: '0.6rem 0.9rem' }}>
                   <ArrowRight size={16} />
                 </button>
               </form>
             )}
           </div>
 
-          <div style={{ marginTop: '1.5rem', paddingTop: '1rem', borderTop: '1px solid var(--border-subtle)' }}>
+          <div style={{ marginTop: '1.25rem', paddingTop: '1rem', borderTop: '1px solid var(--border-subtle)' }}>
             <button
               type="button"
               className="guest-mode-btn"
               onClick={handleGuestContinue}
             >
               <Sparkles size={14} />
-              <span>Or continue offline as Guest (Local Vault)</span>
+              <span>Continue offline as Guest (Local Vault)</span>
             </button>
           </div>
         </div>

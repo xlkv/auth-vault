@@ -30,7 +30,7 @@ export interface UserSession {
   email?: string;
   name?: string;
   avatarUrl?: string;
-  provider: 'local' | 'google' | 'telegram';
+  provider: 'local' | 'google' | 'apple' | 'telegram';
 }
 
 export interface CloudSyncConfig {
