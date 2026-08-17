@@ -11,7 +11,7 @@ const DEFAULT_SUPABASE_KEY = import.meta.env.VITE_SUPABASE_ANON_KEY || 'sb_publi
 
 export class StorageService {
   /**
-   * Get all stored TOTP accounts (defaults to empty array)
+   * Get all stored TOTP accounts (filters out any old demo data)
    */
   static getAccounts(): TotpAccount[] {
     try {
@@ -19,7 +19,15 @@ export class StorageService {
       if (!raw) {
         return [];
       }
-      return JSON.parse(raw);
+      const parsed: TotpAccount[] = JSON.parse(raw);
+      if (!Array.isArray(parsed)) return [];
+      
+      // Permanently purge any leftover demo mock accounts
+      const clean = parsed.filter(a => a && !a.id.startsWith('demo-'));
+      if (clean.length !== parsed.length) {
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(clean));
+      }
+      return clean;
     } catch {
       return [];
     }

@@ -50,6 +50,10 @@ export function App() {
           if (cloudAccounts && cloudAccounts.length > 0) {
             StorageService.saveAccounts(cloudAccounts);
             setAccounts(cloudAccounts);
+          } else {
+            const clean = StorageService.getAccounts().filter(a => !a.id.startsWith('demo-'));
+            StorageService.saveAccounts(clean);
+            setAccounts(clean);
           }
         });
       }
@@ -81,6 +85,10 @@ export function App() {
         if (cloudAccounts && cloudAccounts.length > 0) {
           StorageService.saveAccounts(cloudAccounts);
           setAccounts(cloudAccounts);
+        } else {
+          const clean = StorageService.getAccounts().filter(a => !a.id.startsWith('demo-'));
+          StorageService.saveAccounts(clean);
+          setAccounts(clean);
         }
       });
     }
