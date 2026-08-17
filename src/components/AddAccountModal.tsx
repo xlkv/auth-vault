@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { X, Camera, Image as ImageIcon, KeyRound, AlertCircle, Monitor, Clipboard, CheckCircle2 } from 'lucide-react';
+import { X, Camera, Image as ImageIcon, KeyRound, AlertCircle, Monitor, Clipboard, Check } from 'lucide-react';
 import jsQR from 'jsqr';
 import { TotpAccount, OtpAlgorithm, AccountCategory } from '../types/auth';
 import { parseOtpAuthUri, parseRawInput } from '../lib/parser';
@@ -36,8 +36,10 @@ export const AddAccountModal: React.FC<AddAccountModalProps> = ({
   const [algorithm, setAlgorithm] = useState<OtpAlgorithm>('SHA1');
   const [digits, setDigits] = useState<number>(6);
   const [period, setPeriod] = useState<number>(30);
-  const [quickPaste, setQuickPaste] = useState('');
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
+
+  // Preset services for 1-tap fill
+  const popularServices = ['Google', 'GitHub', 'Telegram', 'Binance', 'Discord', 'AWS', 'OpenAI', 'Apple'];
 
   // Global Clipboard Paste (Cmd + V / Ctrl + V) listener
   useEffect(() => {
@@ -51,14 +53,14 @@ export const AddAccountModal: React.FC<AddAccountModalProps> = ({
         if (items[i].type.includes('image')) {
           const file = items[i].getAsFile();
           if (file) {
-            onShowToast('Decoding QR code from clipboard...', 'info');
+            onShowToast('Scanning QR from clipboard image...', 'info');
             handleImageFile(file);
             break;
           }
         } else if (items[i].type === 'text/plain') {
           items[i].getAsString((text) => {
             if (text.startsWith('otpauth://')) {
-              handleQuickPasteChange(text);
+              handleQuickPaste(text);
               setActiveTab('manual');
             }
           });
@@ -104,7 +106,7 @@ export const AddAccountModal: React.FC<AddAccountModalProps> = ({
       }
     } catch (err) {
       console.error(err);
-      setScannerError('Camera access was denied or not available. Use Screen Scanner or Screenshot Paste.');
+      setScannerError('Camera access was denied or not available. Use Screen Scan or Screenshot Paste.');
     }
   };
 
@@ -137,7 +139,7 @@ export const AddAccountModal: React.FC<AddAccountModalProps> = ({
     } catch (err) {
       console.error(err);
       setIsScreenCapturing(false);
-      setScannerError('Screen capture cancelled or not supported by this browser.');
+      setScannerError('Screen selection cancelled.');
     }
   };
 
@@ -184,7 +186,7 @@ export const AddAccountModal: React.FC<AddAccountModalProps> = ({
       if (parsed.secret && parsed.issuer) {
         onAddAccount(parsed as TotpAccount);
         triggerHaptic('success');
-        onShowToast(`Successfully added ${parsed.issuer}!`, 'success');
+        onShowToast(`Added ${parsed.issuer}!`, 'success');
         onClose();
       }
     } catch (err: unknown) {
@@ -211,7 +213,7 @@ export const AddAccountModal: React.FC<AddAccountModalProps> = ({
           if (qrCode && qrCode.data) {
             handleQrResult(qrCode.data);
           } else {
-            setErrorMsg('No QR code detected in this image. Make sure the QR code is clear.');
+            setErrorMsg('No QR code detected in image. Ensure QR code is clear.');
           }
         }
       };
@@ -220,9 +222,7 @@ export const AddAccountModal: React.FC<AddAccountModalProps> = ({
     reader.readAsDataURL(file);
   };
 
-  // Quick paste otpauth:// handler
-  const handleQuickPasteChange = (text: string) => {
-    setQuickPaste(text);
+  const handleQuickPaste = (text: string) => {
     setErrorMsg(null);
     if (text.trim().startsWith('otpauth://')) {
       try {
@@ -248,7 +248,7 @@ export const AddAccountModal: React.FC<AddAccountModalProps> = ({
 
     try {
       if (!secret.trim()) {
-        setErrorMsg('Please provide a secret key or otpauth:// link');
+        setErrorMsg('Please enter a secret key or otpauth:// link');
         return;
       }
 
@@ -283,7 +283,7 @@ export const AddAccountModal: React.FC<AddAccountModalProps> = ({
       onShowToast(`Added ${newAccount.issuer} to vault!`, 'success');
       onClose();
     } catch (err: unknown) {
-      const message = err instanceof Error ? err.message : 'Invalid parameters';
+      const message = err instanceof Error ? err.message : 'Invalid secret format';
       setErrorMsg(message);
     }
   };
@@ -292,122 +292,126 @@ export const AddAccountModal: React.FC<AddAccountModalProps> = ({
 
   return (
     <div className="modal-overlay" onClick={onClose}>
-      <div className="modal-card" onClick={(e) => e.stopPropagation()}>
-        <div className="modal-header">
-          <h2 className="modal-title">Add 2FA Account</h2>
-          <button className="btn-icon-only" onClick={onClose} aria-label="Close modal">
-            <X size={18} />
+      <div className="modal-card snug-modal" onClick={(e) => e.stopPropagation()}>
+        
+        {/* Minimal Header */}
+        <div className="modal-header-compact">
+          <span className="modal-header-tag">Add Authenticator</span>
+          <button type="button" className="modal-close-chip" onClick={onClose} aria-label="Close">
+            <X size={15} />
           </button>
         </div>
 
-        <div className="modal-body">
-          {/* Tabs */}
-          <div className="modal-tabs">
+        <div className="modal-body-compact">
+          {/* Seamless Apple-Style Segmented Control */}
+          <div className="segmented-control">
             <button
-              className={`modal-tab-btn ${activeTab === 'screen' ? 'active' : ''}`}
+              type="button"
+              className={`segmented-tab ${activeTab === 'screen' ? 'active' : ''}`}
               onClick={() => { setActiveTab('screen'); stopScanner(); }}
             >
-              <Monitor size={15} /> Scan Screen
+              <Monitor size={14} />
+              <span>Screen</span>
             </button>
             <button
-              className={`modal-tab-btn ${activeTab === 'camera' ? 'active' : ''}`}
+              type="button"
+              className={`segmented-tab ${activeTab === 'camera' ? 'active' : ''}`}
               onClick={() => { setActiveTab('camera'); }}
             >
-              <Camera size={15} /> Camera
+              <Camera size={14} />
+              <span>Camera</span>
             </button>
             <button
-              className={`modal-tab-btn ${activeTab === 'upload' ? 'active' : ''}`}
+              type="button"
+              className={`segmented-tab ${activeTab === 'upload' ? 'active' : ''}`}
               onClick={() => { setActiveTab('upload'); stopScanner(); }}
             >
-              <ImageIcon size={15} /> Upload / Paste
+              <ImageIcon size={14} />
+              <span>Upload</span>
             </button>
             <button
-              className={`modal-tab-btn ${activeTab === 'manual' ? 'active' : ''}`}
+              type="button"
+              className={`segmented-tab ${activeTab === 'manual' ? 'active' : ''}`}
               onClick={() => { setActiveTab('manual'); stopScanner(); }}
             >
-              <KeyRound size={15} /> Manual
+              <KeyRound size={14} />
+              <span>Manual</span>
             </button>
           </div>
 
           {errorMsg && (
-            <div className="form-error-banner">
-              <AlertCircle size={16} />
+            <div className="modal-alert-error">
+              <AlertCircle size={15} />
               <span>{errorMsg}</span>
             </div>
           )}
 
           {/* TAB 1: DESKTOP SCREEN QR SCANNER */}
           {activeTab === 'screen' && (
-            <div className="screen-scan-container">
-              <div className="scanner-view-box">
-                <video ref={videoRef} className="scanner-video" />
-                <canvas ref={canvasRef} style={{ display: 'none' }} />
-
-                {isScreenCapturing ? (
-                  <div className="scanner-overlay-target">
-                    <div className="scanner-reticle" />
-                    <div className="scanner-scan-bar" />
-                    <span className="scanner-hint">Scanning desktop screen for QR code...</span>
+            <div className="tab-pane-content">
+              {isScreenCapturing ? (
+                <div className="viewfinder-box">
+                  <video ref={videoRef} className="viewfinder-video" />
+                  <canvas ref={canvasRef} style={{ display: 'none' }} />
+                  <div className="viewfinder-overlay">
+                    <div className="viewfinder-reticle" />
+                    <div className="viewfinder-laser" />
+                    <span className="viewfinder-hint">Scanning selected window...</span>
                   </div>
-                ) : (
-                  <div className="screen-capture-placeholder">
-                    <Monitor size={36} className="placeholder-icon" />
-                    <h4 style={{ fontSize: '0.95rem', fontWeight: 600, marginTop: '0.5rem' }}>
-                      Scan QR Code on Your Desktop
-                    </h4>
-                    <p style={{ fontSize: '0.8rem', color: 'var(--text-secondary)', maxWidth: 280, margin: '0.25rem auto 1rem' }}>
-                      Click below, pick the window or tab containing the QR code, and we'll decode it instantly!
-                    </p>
-                    <button
-                      type="button"
-                      className="btn btn-primary"
-                      onClick={startScreenScan}
-                      style={{ padding: '0.6rem 1.25rem' }}
-                    >
-                      <Monitor size={16} />
-                      <span>Select Screen / Window</span>
-                    </button>
+                </div>
+              ) : (
+                <div className="feature-action-card">
+                  <div className="feature-icon-badge">
+                    <Monitor size={22} />
                   </div>
-                )}
-              </div>
+                  <h4 className="feature-title">Scan Desktop Screen</h4>
+                  <p className="feature-sub">
+                    Pick any open window or browser tab showing the 2FA QR code to decode instantly.
+                  </p>
+                  <button
+                    type="button"
+                    className="btn btn-primary btn-action-large"
+                    onClick={startScreenScan}
+                  >
+                    <Monitor size={16} />
+                    <span>Select Window / Screen</span>
+                  </button>
+                </div>
+              )}
 
               {scannerError && (
-                <div className="form-error-banner" style={{ marginTop: '0.75rem' }}>
-                  <AlertCircle size={16} />
+                <div className="modal-alert-error" style={{ marginTop: '0.65rem' }}>
+                  <AlertCircle size={15} />
                   <span>{scannerError}</span>
                 </div>
               )}
 
-              {/* Mac Screenshot tip */}
-              <div className="clipboard-tip-card">
-                <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                  <Clipboard size={16} color="var(--accent-primary)" />
-                  <span style={{ fontSize: '0.8rem', fontWeight: 600 }}>Pro Tip: Clipboard Screenshot</span>
-                </div>
-                <p style={{ fontSize: '0.75rem', color: 'var(--text-secondary)', marginTop: '0.25rem' }}>
-                  Press <kbd style={{ padding: '0.15rem 0.35rem', background: 'var(--bg-input)', borderRadius: 4, border: '1px solid var(--border-subtle)', fontFamily: 'var(--font-mono)' }}>Cmd + Ctrl + Shift + 4</kbd> on Mac (or PrintScreen on Windows) to capture the QR code, then just press <kbd style={{ padding: '0.15rem 0.35rem', background: 'var(--bg-input)', borderRadius: 4, border: '1px solid var(--border-subtle)', fontFamily: 'var(--font-mono)' }}>Cmd + V</kbd> here!
-                </p>
+              {/* Paste helper pill */}
+              <div className="shortcut-tip-pill">
+                <Clipboard size={13} />
+                <span>
+                  Or take a screenshot and press <kbd>Cmd + V</kbd> here
+                </span>
               </div>
             </div>
           )}
 
           {/* TAB 2: WEBCAM / CAMERA SCANNER */}
           {activeTab === 'camera' && (
-            <div className="camera-scan-container">
-              <div className="scanner-view-box">
-                <video ref={videoRef} className="scanner-video" />
+            <div className="tab-pane-content">
+              <div className="viewfinder-box">
+                <video ref={videoRef} className="viewfinder-video" />
                 <canvas ref={canvasRef} style={{ display: 'none' }} />
-
-                <div className="scanner-overlay-target">
-                  <div className="scanner-reticle" />
-                  <div className="scanner-scan-bar" />
-                  <span className="scanner-hint">Point camera at 2FA QR code</span>
+                <div className="viewfinder-overlay">
+                  <div className="viewfinder-reticle" />
+                  <div className="viewfinder-laser" />
+                  <span className="viewfinder-hint">Point camera at 2FA QR code</span>
                 </div>
               </div>
 
               {scannerError && (
-                <div className="form-error-banner" style={{ marginTop: '0.75rem' }}>
-                  <AlertCircle size={16} />
+                <div className="modal-alert-error" style={{ marginTop: '0.65rem' }}>
+                  <AlertCircle size={15} />
                   <span>{scannerError}</span>
                 </div>
               )}
@@ -416,101 +420,106 @@ export const AddAccountModal: React.FC<AddAccountModalProps> = ({
 
           {/* TAB 3: IMAGE DROP / CLIPBOARD PASTE */}
           {activeTab === 'upload' && (
-            <div
-              className="upload-dropzone"
-              onDragOver={(e) => e.preventDefault()}
-              onDrop={(e) => {
-                e.preventDefault();
-                if (e.dataTransfer.files && e.dataTransfer.files[0]) {
-                  handleImageFile(e.dataTransfer.files[0]);
-                }
-              }}
-              onClick={() => {
-                const input = document.getElementById('qr-file-input') as HTMLInputElement;
-                if (input) input.click();
-              }}
-            >
-              <input
-                type="file"
-                id="qr-file-input"
-                accept="image/*"
-                style={{ display: 'none' }}
-                onChange={(e) => {
-                  if (e.target.files && e.target.files[0]) {
-                    handleImageFile(e.target.files[0]);
+            <div className="tab-pane-content">
+              <div
+                className="upload-target-box"
+                onDragOver={(e) => e.preventDefault()}
+                onDrop={(e) => {
+                  e.preventDefault();
+                  if (e.dataTransfer.files && e.dataTransfer.files[0]) {
+                    handleImageFile(e.dataTransfer.files[0]);
                   }
                 }}
-              />
-              <ImageIcon size={32} style={{ color: 'var(--text-muted)' }} />
-              <div style={{ marginTop: '0.5rem' }}>
-                <p style={{ fontSize: '0.9rem', fontWeight: 600 }}>Drop QR code screenshot here</p>
-                <p style={{ fontSize: '0.75rem', color: 'var(--text-secondary)', marginTop: '0.2rem' }}>
-                  or click to select an image from your computer
-                </p>
+                onClick={() => {
+                  const input = document.getElementById('qr-file-input') as HTMLInputElement;
+                  if (input) input.click();
+                }}
+              >
+                <input
+                  type="file"
+                  id="qr-file-input"
+                  accept="image/*"
+                  style={{ display: 'none' }}
+                  onChange={(e) => {
+                    if (e.target.files && e.target.files[0]) {
+                      handleImageFile(e.target.files[0]);
+                    }
+                  }}
+                />
+                <div className="upload-icon-circle">
+                  <ImageIcon size={22} />
+                </div>
+                <p className="upload-main-text">Drop QR image or click to browse</p>
+                <p className="upload-sub-text">PNG, JPG, WEBP, or direct clipboard copy</p>
               </div>
-              <div className="paste-pill">
+
+              <div className="shortcut-tip-pill">
                 <Clipboard size={13} />
-                <span>Supports direct <kbd style={{ fontFamily: 'var(--font-mono)' }}>Cmd + V</kbd> Paste</span>
+                <span>
+                  Press <kbd>Cmd + V</kbd> anywhere to paste QR image
+                </span>
               </div>
             </div>
           )}
 
           {/* TAB 4: MANUAL ENTRY FORM */}
           {activeTab === 'manual' && (
-            <form onSubmit={handleManualSubmit} className="manual-entry-form">
-              <div className="form-group">
-                <label className="form-label">Quick Import (otpauth:// URI)</label>
-                <input
-                  type="text"
-                  className="form-input"
-                  placeholder="otpauth://totp/Google:user@gmail.com?secret=JBSWY3DPEHPK3PXP..."
-                  value={quickPaste}
-                  onChange={(e) => handleQuickPasteChange(e.target.value)}
-                />
+            <form onSubmit={handleManualSubmit} className="manual-clean-form">
+              {/* Popular quick fill chips */}
+              <div className="preset-chips-row">
+                {popularServices.map((srv) => (
+                  <button
+                    key={srv}
+                    type="button"
+                    className={`preset-chip ${issuer.toLowerCase() === srv.toLowerCase() ? 'active' : ''}`}
+                    onClick={() => setIssuer(srv)}
+                  >
+                    {srv}
+                  </button>
+                ))}
               </div>
 
-              <div className="form-row">
-                <div className="form-group" style={{ flex: 1 }}>
-                  <label className="form-label">Issuer / Service Name *</label>
+              <div className="form-grid-2">
+                <div className="input-field-group">
+                  <label className="input-field-label">Service Name *</label>
                   <input
                     type="text"
-                    className="form-input"
-                    placeholder="e.g. GitHub, Google, AWS"
+                    className="pure-text-input"
+                    placeholder="e.g. GitHub"
                     value={issuer}
                     onChange={(e) => setIssuer(e.target.value)}
                     required
                   />
                 </div>
-                <div className="form-group" style={{ flex: 1 }}>
-                  <label className="form-label">Account / Email</label>
+                <div className="input-field-group">
+                  <label className="input-field-label">Account / Email</label>
                   <input
                     type="text"
-                    className="form-input"
-                    placeholder="e.g. user@example.com"
+                    className="pure-text-input"
+                    placeholder="e.g. user@gmail.com"
                     value={accountName}
                     onChange={(e) => setAccountName(e.target.value)}
                   />
                 </div>
               </div>
 
-              <div className="form-group">
-                <label className="form-label">Secret Key (Base32) *</label>
+              <div className="input-field-group">
+                <label className="input-field-label">Secret Key (Base32) *</label>
                 <input
                   type="text"
-                  className="form-input"
+                  className="pure-text-input mono-font"
                   placeholder="e.g. JBSWY3DPEHPK3PXP"
                   value={secret}
                   onChange={(e) => setSecret(e.target.value)}
-                  style={{ fontFamily: 'var(--font-mono)', letterSpacing: '0.05em' }}
                   required
                 />
               </div>
 
-              <div className="form-row">
-                <div className="form-group" style={{ flex: 1 }}>
-                  <label className="form-label">Category</label>
+              <div className="form-grid-2">
+                <div className="input-field-group">
+                  <label className="input-field-label">Category</label>
                   <select
-                    className="form-select"
+                    className="pure-select-input"
                     value={category}
                     onChange={(e) => setCategory(e.target.value as AccountCategory)}
                   >
@@ -522,40 +531,23 @@ export const AddAccountModal: React.FC<AddAccountModalProps> = ({
                   </select>
                 </div>
 
-                <div className="form-group" style={{ width: 90 }}>
-                  <label className="form-label">Digits</label>
+                <div className="input-field-group">
+                  <label className="input-field-label">Period</label>
                   <select
-                    className="form-select"
-                    value={digits}
-                    onChange={(e) => setDigits(Number(e.target.value))}
-                  >
-                    <option value={6}>6 digits</option>
-                    <option value={8}>8 digits</option>
-                  </select>
-                </div>
-
-                <div className="form-group" style={{ width: 90 }}>
-                  <label className="form-label">Period</label>
-                  <select
-                    className="form-select"
+                    className="pure-select-input"
                     value={period}
                     onChange={(e) => setPeriod(Number(e.target.value))}
                   >
-                    <option value={30}>30s</option>
-                    <option value={60}>60s</option>
+                    <option value={30}>30 seconds (Standard)</option>
+                    <option value={60}>60 seconds</option>
                   </select>
                 </div>
               </div>
 
-              <div className="modal-footer" style={{ padding: '0.75rem 0 0', marginTop: '0.5rem' }}>
-                <button type="button" className="btn btn-secondary" onClick={onClose}>
-                  Cancel
-                </button>
-                <button type="submit" className="btn btn-primary">
-                  <CheckCircle2 size={16} />
-                  <span>Save Account</span>
-                </button>
-              </div>
+              <button type="submit" className="btn btn-primary btn-submit-full">
+                <Check size={16} strokeWidth={2.5} />
+                <span>Save Authenticator</span>
+              </button>
             </form>
           )}
         </div>

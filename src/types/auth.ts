@@ -2,6 +2,8 @@ export type OtpAlgorithm = 'SHA1' | 'SHA256' | 'SHA512';
 
 export type AccountCategory = 'all' | 'work' | 'personal' | 'finance' | 'social' | 'other';
 
+export type ThemeMode = 'dark' | 'light' | 'midnight';
+
 export interface TotpAccount {
   id: string;
   issuer: string;

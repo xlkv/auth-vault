@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { Shield, Plus, Lock, User, LogOut, Send } from 'lucide-react';
-import { UserSession } from '../types/auth';
+import { UserSession, ThemeMode } from '../types/auth';
+import { ThemeSwitcher } from './ThemeSwitcher';
 
 interface NavbarProps {
   onOpenAddModal: () => void;
@@ -11,6 +12,8 @@ interface NavbarProps {
   hasPin: boolean;
   userSession: UserSession | null;
   isTelegram: boolean;
+  currentTheme: ThemeMode;
+  onThemeChange: (theme: ThemeMode) => void;
 }
 
 export const Navbar: React.FC<NavbarProps> = ({
@@ -20,27 +23,30 @@ export const Navbar: React.FC<NavbarProps> = ({
   onSignOut,
   hasPin,
   userSession,
-  isTelegram
+  isTelegram,
+  currentTheme,
+  onThemeChange
 }) => {
   const [showUserMenu, setShowUserMenu] = useState(false);
 
   return (
     <header className="header-nav">
       <div className="header-container">
-        {/* Pure Brand Label */}
+        {/* Left: Minimal Icon & Theme Switcher (No text title as requested) */}
         <div className="brand-badge">
-          <div className="brand-logo-icon">
+          <div className="brand-logo-icon" title="VaultAuth">
             <Shield size={16} strokeWidth={2.4} />
           </div>
-          <span className="brand-title">VaultAuth</span>
+          <ThemeSwitcher currentTheme={currentTheme} onThemeChange={onThemeChange} />
         </div>
 
-        {/* Header Actions */}
+        {/* Right: Header Actions */}
         <div className="header-actions">
           {/* User Profile */}
           {userSession && userSession.provider !== 'local' ? (
             <div style={{ position: 'relative' }}>
               <button
+                type="button"
                 className="user-profile-chip"
                 onClick={() => setShowUserMenu(!showUserMenu)}
               >
@@ -61,7 +67,7 @@ export const Navbar: React.FC<NavbarProps> = ({
                     <p className="user-dropdown-title">{userSession.name}</p>
                     <p className="user-dropdown-sub">{userSession.email || 'Cloud Synced'}</p>
                   </div>
-                  <button className="user-dropdown-item" onClick={onSignOut}>
+                  <button type="button" className="user-dropdown-item" onClick={onSignOut}>
                     <LogOut size={14} />
                     <span>Sign Out</span>
                   </button>
@@ -69,7 +75,7 @@ export const Navbar: React.FC<NavbarProps> = ({
               )}
             </div>
           ) : (
-            <button className="btn btn-auth-trigger" onClick={onOpenAuthModal}>
+            <button type="button" className="btn btn-auth-trigger" onClick={onOpenAuthModal}>
               <User size={15} />
               <span>Sign In</span>
             </button>
@@ -77,18 +83,19 @@ export const Navbar: React.FC<NavbarProps> = ({
 
           {hasPin && (
             <button
+              type="button"
               className="btn btn-icon-only"
               onClick={onLockVault}
-              title="Lock Authenticator"
+              title="Lock Vault"
               aria-label="Lock"
             >
               <Lock size={16} />
             </button>
           )}
 
-          <button className="btn btn-primary btn-add-main" onClick={onOpenAddModal}>
+          <button type="button" className="btn btn-primary btn-add-main" onClick={onOpenAddModal}>
             <Plus size={16} strokeWidth={2.5} />
-            <span>Add Account</span>
+            <span>Add</span>
           </button>
         </div>
       </div>

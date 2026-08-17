@@ -1,5 +1,5 @@
 import { useState, useEffect, useMemo, useCallback } from 'react';
-import { TotpAccount, AccountCategory, CloudSyncConfig, UserSession } from './types/auth';
+import { TotpAccount, AccountCategory, CloudSyncConfig, UserSession, ThemeMode } from './types/auth';
 import { StorageService } from './lib/storage';
 import { AuthService } from './lib/auth';
 import { isTelegramWebApp, initTelegramApp, getTelegramUser } from './lib/telegram';
@@ -27,6 +27,19 @@ export function App() {
   const [toasts, setToasts] = useState<ToastMessage[]>([]);
   const [userSession, setUserSession] = useState<UserSession | null>(() => AuthService.getSession());
   const [syncConfig, setSyncConfig] = useState<CloudSyncConfig>(() => StorageService.getSyncConfig());
+  const [currentTheme, setCurrentTheme] = useState<ThemeMode>(() => {
+    return (localStorage.getItem('vaultauth_theme') as ThemeMode) || 'dark';
+  });
+
+  const handleThemeChange = (theme: ThemeMode) => {
+    setCurrentTheme(theme);
+    localStorage.setItem('vaultauth_theme', theme);
+    document.documentElement.setAttribute('data-theme', theme);
+  };
+
+  useEffect(() => {
+    document.documentElement.setAttribute('data-theme', currentTheme);
+  }, [currentTheme]);
 
   const isTelegram = isTelegramWebApp();
 
@@ -244,6 +257,8 @@ export function App() {
         hasPin={hasPin}
         userSession={userSession}
         isTelegram={isTelegram}
+        currentTheme={currentTheme}
+        onThemeChange={handleThemeChange}
       />
 
       <main className="main-content-area">
