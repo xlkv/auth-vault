@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Shield, Plus, Lock, User, LogOut, Send } from 'lucide-react';
+import { Plus, Lock, User, LogOut, Send } from 'lucide-react';
 import { UserSession, ThemeMode } from '../types/auth';
 import { ThemeSwitcher } from './ThemeSwitcher';
 
@@ -32,11 +32,8 @@ export const Navbar: React.FC<NavbarProps> = ({
   return (
     <header className="header-nav">
       <div className="header-container">
-        {/* Left: Minimal Icon & Theme Switcher (No text title as requested) */}
+        {/* Left: Pure Theme Switcher (No title and No title icon) */}
         <div className="brand-badge">
-          <div className="brand-logo-icon" title="VaultAuth">
-            <Shield size={16} strokeWidth={2.4} />
-          </div>
           <ThemeSwitcher currentTheme={currentTheme} onThemeChange={onThemeChange} />
         </div>
 
