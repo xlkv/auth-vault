@@ -9,6 +9,7 @@ import { OtpCard } from './components/OtpCard';
 import { AddAccountModal } from './components/AddAccountModal';
 import { SettingsModal } from './components/SettingsModal';
 import { AuthModal } from './components/AuthModal';
+import { AuthScreen } from './components/AuthScreen';
 import { LockScreen } from './components/LockScreen';
 import { ToastContainer, ToastMessage } from './components/Toast';
 import { Plus, ShieldAlert, Sparkles } from 'lucide-react';
@@ -44,6 +45,13 @@ export function App() {
       setUserSession(user);
       if (user) {
         showToast(`Signed in as ${user.name || user.email}`, 'success');
+        // Fetch cloud vault on sign in
+        StorageService.fetchCloudVault(user.id).then((cloudAccounts) => {
+          if (cloudAccounts && cloudAccounts.length > 0) {
+            StorageService.saveAccounts(cloudAccounts);
+            setAccounts(cloudAccounts);
+          }
+        });
       }
     });
 
@@ -66,6 +74,25 @@ export function App() {
     return () => unsubscribe();
   }, [isTelegram, showToast]);
 
+  // Load cloud vault if user is already logged in on initial load
+  useEffect(() => {
+    if (userSession && userSession.provider !== 'local' && userSession.provider !== 'telegram') {
+      StorageService.fetchCloudVault(userSession.id).then((cloudAccounts) => {
+        if (cloudAccounts && cloudAccounts.length > 0) {
+          StorageService.saveAccounts(cloudAccounts);
+          setAccounts(cloudAccounts);
+        }
+      });
+    }
+  }, [userSession]);
+
+  // Sync to cloud helper
+  const syncToCloud = useCallback((updatedAccounts: TotpAccount[]) => {
+    if (userSession && userSession.provider !== 'local' && userSession.provider !== 'telegram') {
+      StorageService.pushCloudVault(userSession.id, updatedAccounts);
+    }
+  }, [userSession]);
+
   // Listen for storage updates
   useEffect(() => {
     const handleStorageChange = () => {
@@ -78,18 +105,24 @@ export function App() {
   // Handlers
   const handleAddAccount = (account: TotpAccount) => {
     StorageService.upsertAccount(account);
-    setAccounts(StorageService.getAccounts());
+    const updated = StorageService.getAccounts();
+    setAccounts(updated);
+    syncToCloud(updated);
     confetti({ particleCount: 40, spread: 50, origin: { y: 0.85 } });
   };
 
   const handleDeleteAccount = (id: string) => {
     StorageService.deleteAccount(id);
-    setAccounts(StorageService.getAccounts());
+    const updated = StorageService.getAccounts();
+    setAccounts(updated);
+    syncToCloud(updated);
   };
 
   const handleTogglePin = (id: string) => {
     StorageService.togglePin(id);
-    setAccounts(StorageService.getAccounts());
+    const updated = StorageService.getAccounts();
+    setAccounts(updated);
+    syncToCloud(updated);
   };
 
   const handleImportAccounts = (imported: TotpAccount[]) => {
@@ -100,6 +133,7 @@ export function App() {
     const merged = Array.from(map.values());
     StorageService.saveAccounts(merged);
     setAccounts(merged);
+    syncToCloud(merged);
   };
 
   const handlePinChange = (newPin: string | null) => {
@@ -115,6 +149,8 @@ export function App() {
   };
 
   const handleSignOut = async () => {
+    StorageService.clearAccounts();
+    setAccounts([]);
     await AuthService.signOut();
     setUserSession(null);
     showToast('Signed out', 'info');
@@ -157,6 +193,16 @@ export function App() {
         return a.issuer.localeCompare(b.issuer);
       });
   }, [accounts, activeCategory, searchQuery]);
+
+  // Mandatory Authentication Screen if not logged in
+  if (!userSession) {
+    return (
+      <>
+        <AuthScreen onShowToast={showToast} />
+        <ToastContainer toasts={toasts} />
+      </>
+    );
+  }
 
   if (isLocked) {
     return (

@@ -9,76 +9,19 @@ const USER_SESSION_KEY = 'vaultauth_session_v1';
 const DEFAULT_SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL || 'https://cszarmfcbwargdzopfxd.supabase.co';
 const DEFAULT_SUPABASE_KEY = import.meta.env.VITE_SUPABASE_ANON_KEY || 'sb_publishable_hhVuX7PZqhd6rqFNCzSkwQ_TxOkRRvp';
 
-// Seed demo accounts for immediate delight on first run
-export const DEMO_ACCOUNTS: TotpAccount[] = [
-  {
-    id: 'demo-github',
-    issuer: 'GitHub',
-    accountName: 'developer@example.com',
-    secret: 'JBSWY3DPEHPK3PXP',
-    algorithm: 'SHA1',
-    digits: 6,
-    period: 30,
-    category: 'work',
-    pinned: true,
-    createdAt: Date.now() - 86400000 * 5,
-    updatedAt: Date.now() - 86400000 * 5
-  },
-  {
-    id: 'demo-google',
-    issuer: 'Google',
-    accountName: 'personal.email@gmail.com',
-    secret: 'HXDMVJECJJWSRB3HWIZR4IFUGFTMXBOZ',
-    algorithm: 'SHA1',
-    digits: 6,
-    period: 30,
-    category: 'personal',
-    pinned: true,
-    createdAt: Date.now() - 86400000 * 3,
-    updatedAt: Date.now() - 86400000 * 3
-  },
-  {
-    id: 'demo-telegram',
-    issuer: 'Telegram',
-    accountName: '+998 90 123 45 67',
-    secret: 'MZXW6YTBOI======',
-    algorithm: 'SHA1',
-    digits: 6,
-    period: 30,
-    category: 'social',
-    pinned: false,
-    createdAt: Date.now() - 86400000 * 2,
-    updatedAt: Date.now() - 86400000 * 2
-  },
-  {
-    id: 'demo-binance',
-    issuer: 'Binance',
-    accountName: 'crypto_trader',
-    secret: 'NBSWY3DPEHPK3PXP',
-    algorithm: 'SHA1',
-    digits: 6,
-    period: 30,
-    category: 'finance',
-    pinned: false,
-    createdAt: Date.now() - 86400000,
-    updatedAt: Date.now() - 86400000
-  }
-];
-
 export class StorageService {
   /**
-   * Get all stored TOTP accounts
+   * Get all stored TOTP accounts (defaults to empty array)
    */
   static getAccounts(): TotpAccount[] {
     try {
       const raw = localStorage.getItem(STORAGE_KEY);
       if (!raw) {
-        this.saveAccounts(DEMO_ACCOUNTS);
-        return DEMO_ACCOUNTS;
+        return [];
       }
       return JSON.parse(raw);
     } catch {
-      return DEMO_ACCOUNTS;
+      return [];
     }
   }
 
@@ -87,6 +30,14 @@ export class StorageService {
    */
   static saveAccounts(accounts: TotpAccount[]): void {
     localStorage.setItem(STORAGE_KEY, JSON.stringify(accounts));
+    window.dispatchEvent(new Event('vaultauth_accounts_updated'));
+  }
+
+  /**
+   * Clear local accounts (on sign out)
+   */
+  static clearAccounts(): void {
+    localStorage.removeItem(STORAGE_KEY);
     window.dispatchEvent(new Event('vaultauth_accounts_updated'));
   }
 
@@ -184,6 +135,67 @@ export class StorageService {
 
   static saveSyncConfig(config: CloudSyncConfig): void {
     localStorage.setItem(SYNC_CONFIG_KEY, JSON.stringify(config));
+  }
+
+  /**
+   * Fetch vault from Supabase cloud
+   */
+  static async fetchCloudVault(userId: string): Promise<TotpAccount[] | null> {
+    const supabase = getSupabaseClient();
+    if (!supabase || !userId) return null;
+
+    try {
+      const { data, error } = await supabase
+        .from('user_vaults')
+        .select('encrypted_vault')
+        .eq('user_id', userId)
+        .maybeSingle();
+
+      if (error) {
+        console.warn('Could not fetch cloud vault:', error.message);
+        return null;
+      }
+
+      if (data?.encrypted_vault) {
+        const parsed = JSON.parse(data.encrypted_vault);
+        if (Array.isArray(parsed)) {
+          return parsed;
+        }
+      }
+      return [];
+    } catch (err) {
+      console.warn('Error reading cloud vault:', err);
+      return null;
+    }
+  }
+
+  /**
+   * Push vault to Supabase cloud
+   */
+  static async pushCloudVault(userId: string, accounts: TotpAccount[]): Promise<boolean> {
+    const supabase = getSupabaseClient();
+    if (!supabase || !userId) return false;
+
+    try {
+      const payload = {
+        user_id: userId,
+        encrypted_vault: JSON.stringify(accounts),
+        updated_at: new Date().toISOString()
+      };
+
+      const { error } = await supabase
+        .from('user_vaults')
+        .upsert(payload, { onConflict: 'user_id' });
+
+      if (error) {
+        console.warn('Could not sync to cloud:', error.message);
+        return false;
+      }
+      return true;
+    } catch (err) {
+      console.warn('Error writing cloud vault:', err);
+      return false;
+    }
   }
 }
 
