@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Mail, ArrowRight, CheckCircle2, Shield, Lock } from 'lucide-react';
+import { Mail, ArrowRight, CheckCircle2, Sparkles, KeyRound } from 'lucide-react';
 import { AuthService } from '../lib/auth';
 
 interface AuthScreenProps {
@@ -20,7 +20,7 @@ export const AuthScreen: React.FC<AuthScreenProps> = ({
     const res = await AuthService.signInWithGoogle();
     if (!res.success) {
       setIsLoading(false);
-      setLoadingProvider('google');
+      setLoadingProvider(null);
       onShowToast(res.error || 'Google login failed.', 'error');
     }
   };
@@ -31,7 +31,7 @@ export const AuthScreen: React.FC<AuthScreenProps> = ({
     const res = await AuthService.signInWithApple();
     if (!res.success) {
       setIsLoading(false);
-      setLoadingProvider('apple');
+      setLoadingProvider(null);
       onShowToast(res.error || 'Apple login failed.', 'error');
     }
   };
@@ -57,41 +57,45 @@ export const AuthScreen: React.FC<AuthScreenProps> = ({
   };
 
   return (
-    <div className="auth-layout">
-      {/* Ambient background glow */}
-      <div className="auth-ambient-glow" />
+    <div className="tbc-auth-container">
+      {/* Playful organic ambient lighting mesh */}
+      <div className="tbc-mesh-glow glow-top" />
+      <div className="tbc-mesh-glow glow-bottom" />
 
-      <div className="auth-card-wrapper">
-        <div className="auth-card">
-          {/* Brand Emblem */}
-          <div className="auth-emblem-wrap">
-            <div className="auth-emblem">
-              <Shield size={24} strokeWidth={2.4} className="emblem-shield" />
-              <Lock size={12} strokeWidth={3} className="emblem-lock" />
+      <main className="tbc-auth-card-frame">
+        <div className="tbc-card">
+          {/* Handcrafted Brand Mark */}
+          <div className="tbc-brand-badge">
+            <div className="tbc-icon-box">
+              <KeyRound size={22} strokeWidth={2.2} className="tbc-key-icon" />
             </div>
+            <span className="tbc-brand-label">VaultAuth</span>
           </div>
 
-          {/* Clean Typography */}
-          <div className="auth-header-text">
-            <h1 className="auth-headline">Welcome to VaultAuth</h1>
-            <p className="auth-tagline">
-              Your fast, zero-knowledge 2FA authenticator
+          {/* Editorial Headline */}
+          <div className="tbc-header">
+            <h1 className="tbc-title">
+              Your keys, <br />
+              <span className="tbc-serif-italic">everywhere you go.</span>
+            </h1>
+            <p className="tbc-desc">
+              A calm, delightfully fast 2FA authenticator. Private by design and effortlessly synced.
             </p>
           </div>
 
-          {/* Actions Stack */}
-          <div className="auth-form-stack">
-            {/* Google OAuth */}
+          {/* Tactile Pill Buttons */}
+          <div className="tbc-actions">
+            {/* Google OAuth Pill */}
             <button
               type="button"
-              className="auth-btn auth-btn-google"
+              className="tbc-pill-btn btn-google"
               onClick={handleGoogleLogin}
               disabled={isLoading}
             >
               {loadingProvider === 'google' ? (
-                <span className="auth-spinner" />
+                <span className="tbc-spinner" />
               ) : (
-                <svg width="19" height="19" viewBox="0 0 24 24" className="auth-provider-logo">
+                <svg width="20" height="20" viewBox="0 0 24 24" className="tbc-logo-svg">
                   <path
                     fill="#4285F4"
                     d="M23.745 12.27c0-.7-.06-1.4-.19-2.07H12v4.51h6.6c-.29 1.52-1.14 2.8-2.4 3.66v3.05h3.88c2.27-2.09 3.665-5.17 3.665-9.15z"
@@ -110,54 +114,51 @@ export const AuthScreen: React.FC<AuthScreenProps> = ({
                   />
                 </svg>
               )}
-              <span className="auth-btn-label">
-                {loadingProvider === 'google' ? 'Connecting to Google...' : 'Continue with Google'}
+              <span className="tbc-btn-text">
+                {loadingProvider === 'google' ? 'Connecting Google...' : 'Continue with Google'}
               </span>
             </button>
 
-            {/* Apple OAuth */}
+            {/* Apple OAuth Pill */}
             <button
               type="button"
-              className="auth-btn auth-btn-apple"
+              className="tbc-pill-btn btn-apple"
               onClick={handleAppleLogin}
               disabled={isLoading}
             >
               {loadingProvider === 'apple' ? (
-                <span className="auth-spinner" />
+                <span className="tbc-spinner-white" />
               ) : (
-                <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor" className="auth-provider-logo">
+                <svg width="19" height="19" viewBox="0 0 24 24" fill="currentColor" className="tbc-logo-svg">
                   <path d="M18.71 19.5c-.83 1.24-1.71 2.45-3.05 2.47-1.34.03-1.77-.79-3.29-.79-1.53 0-2 .77-3.27.82-1.31.05-2.3-1.32-3.14-2.53C4.25 17 2.94 12.45 4.7 9.39c.87-1.52 2.43-2.48 4.12-2.51 1.28-.02 2.5.87 3.29.87.78 0 2.26-1.07 3.81-.91.65.03 2.47.26 3.64 1.98-.09.06-2.17 1.28-2.15 3.81.03 3.02 2.65 4.03 2.68 4.04-.03.07-.42 1.44-1.38 2.83M15.97 6.37c.61-.75 1.04-1.8 0.92-2.85-.9.04-2 .6-2.65 1.35-.58.66-1.09 1.73-.95 2.76 1.01.08 2.05-.51 2.68-1.26z" />
                 </svg>
               )}
-              <span className="auth-btn-label">
-                {loadingProvider === 'apple' ? 'Connecting to Apple...' : 'Continue with Apple'}
+              <span className="tbc-btn-text">
+                {loadingProvider === 'apple' ? 'Connecting Apple...' : 'Continue with Apple'}
               </span>
             </button>
 
-            {/* Minimalist Divider */}
-            <div className="auth-separator">
-              <span className="separator-line" />
-              <span className="separator-text">or with email</span>
-              <span className="separator-line" />
+            {/* Divider */}
+            <div className="tbc-divider">
+              <div className="divider-hairline" />
+              <span className="divider-label">or magic link</span>
+              <div className="divider-hairline" />
             </div>
 
             {/* Email Magic Link */}
             {emailSent ? (
-              <div className="auth-success-card">
-                <CheckCircle2 size={20} className="success-icon" />
-                <div className="success-text">
-                  <p className="success-title">Magic link sent!</p>
-                  <p className="success-subtitle">Check {email} for your instant login link.</p>
-                </div>
+              <div className="tbc-sent-banner">
+                <CheckCircle2 size={18} className="sent-icon" />
+                <span>Link sent! Check your inbox for <b>{email}</b>.</span>
               </div>
             ) : (
-              <form onSubmit={handleEmailLogin} className="auth-email-form">
-                <div className="auth-input-group">
-                  <Mail size={16} className="auth-input-icon" />
+              <form onSubmit={handleEmailLogin} className="tbc-email-box">
+                <div className="tbc-input-wrap">
+                  <Mail size={16} className="tbc-mail-icon" />
                   <input
                     type="email"
-                    className="auth-text-input"
-                    placeholder="Enter your email address"
+                    className="tbc-input"
+                    placeholder="name@example.com"
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
                     disabled={isLoading}
@@ -165,14 +166,14 @@ export const AuthScreen: React.FC<AuthScreenProps> = ({
                   />
                   <button
                     type="submit"
-                    className="auth-submit-btn"
+                    className="tbc-send-btn"
                     disabled={isLoading || !email.trim()}
-                    aria-label="Submit email"
+                    title="Send login link"
                   >
                     {loadingProvider === 'email' ? (
-                      <span className="auth-spinner-sm" />
+                      <span className="tbc-spinner-sm" />
                     ) : (
-                      <ArrowRight size={16} strokeWidth={2.4} />
+                      <ArrowRight size={15} strokeWidth={2.5} />
                     )}
                   </button>
                 </div>
@@ -180,12 +181,15 @@ export const AuthScreen: React.FC<AuthScreenProps> = ({
             )}
           </div>
 
-          {/* Polished Security Trust Footer */}
-          <div className="auth-trust-footer">
-            <span>End-to-End Encrypted • Cross-Device Sync</span>
-          </div>
+          {/* Minimal Editorial Footer */}
+          <footer className="tbc-footer">
+            <div className="tbc-trust-pill">
+              <Sparkles size={13} className="trust-sparkle" />
+              <span>Zero-knowledge client-side encryption</span>
+            </div>
+          </footer>
         </div>
-      </div>
+      </main>
     </div>
   );
 };
