@@ -411,9 +411,10 @@ body {
   min-width: 0;
 }
 
-.service-mini-badge {
-  width: 26px;
-  height: 26px;
+.service-mini-badge,
+.service-brand-icon-wrapper {
+  width: 30px;
+  height: 30px;
   border-radius: var(--radius-sm);
   background: var(--bg-surface-elevated);
   border: 1px solid var(--border-subtle);
@@ -424,6 +425,12 @@ body {
   font-weight: 700;
   color: var(--text-primary);
   flex-shrink: 0;
+  transition: all var(--transition-fast);
+}
+
+.otp-card:hover .service-brand-icon-wrapper {
+  border-color: var(--border-hover);
+  background: var(--bg-surface-hover);
 }
 
 .service-text-group {

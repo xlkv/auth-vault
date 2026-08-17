@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Shield, Plus, Settings, Lock, User, LogOut, Send } from 'lucide-react';
+import { Shield, Plus, Lock, User, LogOut, Send } from 'lucide-react';
 import { UserSession } from '../types/auth';
 
 interface NavbarProps {
@@ -15,7 +15,6 @@ interface NavbarProps {
 
 export const Navbar: React.FC<NavbarProps> = ({
   onOpenAddModal,
-  onOpenSettingsModal,
   onOpenAuthModal,
   onLockVault,
   onSignOut,
@@ -89,15 +88,6 @@ export const Navbar: React.FC<NavbarProps> = ({
               <Lock size={16} />
             </button>
           )}
-
-          <button
-            className="btn btn-icon-only"
-            onClick={onOpenSettingsModal}
-            title="Settings"
-            aria-label="Settings"
-          >
-            <Settings size={16} />
-          </button>
 
           <button className="btn btn-primary" onClick={onOpenAddModal}>
             <Plus size={16} strokeWidth={2.5} />

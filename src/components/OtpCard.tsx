@@ -2,8 +2,8 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { Pin, Trash2, Check } from 'lucide-react';
 import { TotpAccount } from '../types/auth';
 import { generateTotp, getTimeRemaining, formatOtpCode } from '../lib/totp';
-import { detectServiceMeta } from '../lib/services';
 import { triggerHaptic } from '../lib/telegram';
+import { BrandIcon } from './BrandIcon';
 
 interface OtpCardProps {
   account: TotpAccount;
@@ -21,8 +21,6 @@ export const OtpCard: React.FC<OtpCardProps> = ({
   const [code, setCode] = useState<string>('------');
   const [timeInfo, setTimeInfo] = useState(getTimeRemaining(account.period));
   const [copied, setCopied] = useState<boolean>(false);
-
-  const meta = detectServiceMeta(account.issuer, account.accountName);
 
   const refreshCode = useCallback(async () => {
     try {
@@ -84,8 +82,8 @@ export const OtpCard: React.FC<OtpCardProps> = ({
     >
       <div className="card-header-row">
         <div className="card-issuer-group">
-          <div className="service-mini-badge" style={{ borderColor: meta.color }}>
-            {account.issuer.slice(0, 2).toUpperCase()}
+          <div className="service-brand-icon-wrapper">
+            <BrandIcon issuer={account.issuer} size={22} />
           </div>
           <div className="service-text-group">
             <div className="service-issuer-title">
