@@ -1087,3 +1087,47 @@ body {
 @keyframes spin {
   to { transform: rotate(360deg); }
 }
+
+/* Screen Scanner & Clipboard helpers */
+.screen-capture-placeholder {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 2rem 1.5rem;
+  background: var(--bg-surface-elevated);
+  border: 1px dashed var(--border-subtle);
+  border-radius: var(--radius-md);
+  text-align: center;
+  min-height: 220px;
+}
+
+.screen-capture-placeholder .placeholder-icon {
+  color: var(--accent-primary);
+  opacity: 0.8;
+}
+
+.clipboard-tip-card {
+  margin-top: 0.85rem;
+  padding: 0.75rem 1rem;
+  background: var(--bg-surface-elevated);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-sm);
+  display: flex;
+  flex-direction: column;
+  text-align: left;
+}
+
+.paste-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  font-size: 0.75rem;
+  color: var(--text-muted);
+  background: var(--bg-surface);
+  border: 1px solid var(--border-subtle);
+  padding: 0.35rem 0.7rem;
+  border-radius: 9999px;
+  margin-top: 0.75rem;
+}
+
